@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Agent Assistant</title>
+    <style>
+        body {
+            background-color: #f0f4f8; /* Light background */
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+        }
+
+        h1 {
+            font-size: 3em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        h3 {
+            font-size: 1.5em;
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        input[type="text"] {
+            width: 300px;
+            padding: 12px 20px;
+            margin: 8px 0;
+            box-sizing: border-box;
+            border: 2px solid #0077cc;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 12px 25px;
+            background-color: #0077cc;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        button:hover {
+            background-color: #005fa3;
+        }
+
+        #response {
+            margin-top: 30px;
+            font-size: 18px;
+            color: #444;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hi, I'm your agent</h1>
+    <h3>Integrated with Pinecone Database</h3>
+    <p>Ask me anything related to the AI Engineer internship roadmap!</p>
+
+    <input type="text" id="queryInput" placeholder="Type your AI question here...">
+    <button onclick="sendQuery()">Send</button>
+
+    <p id="response"></p>
+
+    <script>
+        function sendQuery() {
+            const query = document.getElementById('queryInput').value;
+            const responseElement = document.getElementById('response');
+
+            if (query.trim() === "") {
+                responseElement.innerText = "Please enter a question.";
+                return;
+            }
+
+            responseElement.innerText = "Loading your response..."; // 👈 Show loading message
+
+            fetch('http://localhost:5000/ask', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ query: query })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.answer) {
+                    responseElement.innerText = data.answer;
+                } else if (data.error) {
+                    responseElement.innerText = "Error: " + data.error;
+                }
+            })
+            .catch(error => {
+                responseElement.innerText = "Error: " + error;
+            });
+        }
+    </script>
+</body>
+</html>
