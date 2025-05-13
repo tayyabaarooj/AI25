@@ -1,0 +1,2 @@
+Task: Build simple mcp that has all vector database functionalities.
+Sol: I used Pinecone database in this task too and this MCP server has all pineocne tools except upsert records & create index for model.
