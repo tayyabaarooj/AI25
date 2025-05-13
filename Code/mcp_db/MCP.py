@@ -20,10 +20,19 @@ mcp = FastMCP("pinecone-mcp")
 
 
 embedder = OllamaEmbeddings(model="llama3")
+
 @mcp.tool()
 async def search_docs(query: str) -> str:
-    """Search the official Pinecone documentation"""
-    return f"Searching docs for: {query}"
+    """Search the indexed documents for relevant information based on a query"""
+    query_embedding = embedder.embed_query(query)
+    results = index.query(vector=query_embedding, top_k=5, include_metadata=True)
+
+    if not results.get("matches"):
+        return "No relevant documents found."
+
+    top_texts = [match["metadata"]["text"] for match in results["matches"]]
+    combined_response = "\n\n---\n\n".join(top_texts)
+    return f"Top results:\n\n{combined_response}"
 
 
 @mcp.tool()
@@ -39,7 +48,7 @@ async def describe_index_stats() -> Dict[str, Any]:
 @mcp.tool()
 async def search_records(query: str, top_k: int = 5) -> List[Dict[str, Any]]:
     """Searches for records in an index based on a text query"""
-    results = index.query(vector=[0] * 1536, top_k=top_k, include_metadata=True, query=query)
+    results = index.query(vector=[0] * 4096, top_k=top_k, include_metadata=True, query=query)
     return [{"id": m["id"], "score": m["score"], "metadata": m.get("metadata", {})} for m in results["matches"]]
 
 
@@ -75,6 +84,6 @@ async def upload_document(file_path: str) -> str:
 
 if __name__ == "__main__":
     async def test():
-        result = await upload_document("roadmap.pdf")
+        result = await search_docs("wwhat is week 15 about ?")
         print(result)
     asyncio.run(test())
