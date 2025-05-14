@@ -66,8 +66,6 @@ def prompt_router(input):
         print("using tech similarity")
         return PromptTemplate.from_template(technology_template)
 
-input_query={'query':"what's best way to improve my car battery life?"}
-
 
 chain = (
     {"query": RunnablePassthrough()}
