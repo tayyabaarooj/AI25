@@ -32,7 +32,7 @@ def classify_as_tech(question: str) -> str:
     """
     print("Function 'classify_as_tech' is used")
 
-llm= ChatOllama(model="mistral")
+llm= ChatOllama(model="llama3.1")
 query="how do i identify the most delicious biryani?"
 tools=[classify_as_car,classify_as_restaurant, classify_as_tech]
 llm_with_tools =llm.bind_tools(tools)
