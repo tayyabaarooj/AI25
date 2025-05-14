@@ -3,7 +3,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 from langchain_ollama import OllamaEmbeddings
-
+from langchain_ollama import ChatOllama
 
 car_template="""You are an expert in automobile. You have extensive knowlegde about car mechanics, \
     models, and automobile technology.You provide clear and helpful answers about cars.
@@ -68,10 +68,12 @@ def prompt_router(input):
 
 input_query={'query':"what's best way to improve my car battery life?"}
 
-chain =(
-    {"query":RunnablePassthrough()}
+
+chain = (
+    {"query": RunnablePassthrough()}
     | RunnableLambda(prompt_router)
-    | OllamaEmbeddings()
+    | ChatOllama(model="llama3")
     | StrOutputParser()
 )
-chain.invoke("How do i identify the italian pasta in a restaurant")
+response= chain.invoke("How do i identify the italian pasta in a restaurant")
+print(response)
