@@ -8,18 +8,18 @@ from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
 from langchain_core.tools import Tool
 
-# Load environment variables
+
 load_dotenv()
 
-# MongoDB setup
+
 mongo_client = MongoClient(os.getenv("MONGO_URI", "mongodb://localhost:27017"))
 db = mongo_client["mcp_demo"]
 collection = db["users"]
 
-# MCP server
+
 mcp = FastMCP("MongoDBService", port=8000)
 
-# MCP Tools for MongoDB CRUD
+
 @mcp.tool()
 async def create_user(ctx: Context, name: str, email: str) -> str:
     """Add a new user."""
@@ -44,9 +44,9 @@ async def delete_user(ctx: Context, email: str) -> str:
     result = collection.delete_one({"email": email})
     return "Deleted user" if result.deleted_count else "User not found"
 
-# LangChain ReAct Agent
+
 async def run_agent():
-    llm = ChatOllama(model="llama3.1", temperature=0.7)
+    llm = ChatOllama(model="llama3.1")
     tools = [
     Tool.from_function(
         func=create_user,
@@ -92,7 +92,9 @@ async def run_agent():
         tools=tools,
         prompt=prompt
     )
-    agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=False)
+    
+    agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True, handle_parsing_errors=True)
+
 
     print("🤖 MCP Agent ready! Type 'exit' to quit.")
     while True:
@@ -101,9 +103,14 @@ async def run_agent():
             print("👋 Exiting.")
             break
         response = await agent_executor.ainvoke({"input": user_input})
-        print(f"\nAgent: {response['output']}")
+        if not response['output']:
+            print("\nAgent: I couldn't understand that. Could you please rephrase?")
+            
+        else:
+            print(f"\nAgent: {response['output']}")
 
-# Main runner
+
+
 async def main():
     server_task = asyncio.create_task(mcp.run_sse_async())
     await asyncio.sleep(1) 
