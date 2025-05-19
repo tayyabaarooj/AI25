@@ -1,0 +1,6 @@
+exploration of Whisper + speech APIs:
+
+
+we can integrate apiss like Google Cloud Speech-to-Text, Azure Speech, AssemblyAI
+whisper alone will only transcribe the text hoewver using it with othewr speech apis can provide features like real time interactions etc.
+ill most porbably go for Google Cloud Speech-to-Tex as it provides free tier and its super simple
