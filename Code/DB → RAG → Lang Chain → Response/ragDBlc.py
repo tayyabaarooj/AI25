@@ -5,8 +5,9 @@ from langchain_mongodb import MongoDBAtlasVectorSearch
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+from langchain.agents.agent import AgentExecutor
+from langchain.agents import create_react_agent
 from langchain_core.runnables import RunnablePassthrough
-from langchain.agents import AgentExecutor, create_react_agent
 from langchain.tools import tool
 
 
@@ -56,34 +57,40 @@ retriever = vector_store.as_retriever(search_kwargs={"k": 5})
 llm = ChatOllama(model="mistral", temperature=0.4)
 
 
+
 @tool
 def retrieve_context(question: str) -> str:
     """Retrieve relevant context for a question."""
     docs = retriever.invoke(question)
-    return "\n\n".join(doc.page_content for doc in docs)
-
+    return "\n".join(f"- {doc.page_content}" for doc in docs)
 tools = [retrieve_context]
 
 react_prompt = PromptTemplate.from_template(
-    """You are an assistant that answers questions using the following tools when needed: {tool_names}.
+    """Answer questions using the following tools when needed: {tool_names}.
 
-Tools available:
+Tools:
 {tools}
 
-Question: {question}
-Thought: [Your reasoning]
-Action: [Call a tool like retrieve_context or none]
-Observation: [Result of action, if any]
-{agent_scratchpad}
-Answer: [Your final answer]
+Use this format:
 
-If you don't need a tool, answer directly. End with "Thanks for asking!"
+Question: {question}
+Thought: [What you think you should do]
+Action: [the action to take, like retrieve_context or none]
+Action Input: [input to the action]
+Observation: [result of the action]
+... (repeat Thought/Action/Action Input/Observation as needed)
+Final Answer: [your final answer ending with "Thanks for asking!"]
+
+Begin!
+
+{agent_scratchpad}
 """
 )
 
-agent = create_react_agent(llm, tools, react_prompt)
-agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
+
+agent = create_react_agent(llm=llm, tools=tools,prompt=react_prompt)
+agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True, handle_parsing_errors=True)
 
 
 rag_template = """Answer based on the context. If the context lacks info, say so. Keep it short and end with "Thanks for asking!"
